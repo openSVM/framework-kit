@@ -112,6 +112,26 @@ const signature = await usdc.sendTransfer({
 console.log(signature.toString());
 ```
 
+### Wrap and unwrap SOL (wSOL)
+
+```ts
+const wallet = client.store.getState().wallet;
+if (wallet.status !== "connected") throw new Error("Connect wallet first");
+
+// Wrap 0.1 SOL into wSOL
+const wrapSignature = await client.wsol.wrapSol({
+  amount: 100_000_000n, // 0.1 SOL in lamports
+  authority: wallet.session,
+});
+console.log(`Wrapped SOL: ${wrapSignature.toString()}`);
+
+// Unwrap wSOL back to native SOL
+const unwrapSignature = await client.wsol.unwrapSol({
+  authority: wallet.session,
+});
+console.log(`Unwrapped SOL: ${unwrapSignature.toString()}`);
+```
+
 ### Fetch address lookup tables
 
 ```ts
