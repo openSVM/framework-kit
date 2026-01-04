@@ -76,6 +76,13 @@ export {
 	type TransactionSignOptions,
 } from './features/transactions';
 export {
+	createWsolHelper,
+	type UnwrapSolConfig,
+	type WrapSolConfig,
+	WSOL_MINT_ADDRESS,
+	type WsolHelper,
+} from './features/wsol';
+export {
 	createTokenAmount,
 	type FormatAmountOptions,
 	type ParseAmountOptions,

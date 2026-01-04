@@ -4,6 +4,7 @@ import { createSolTransferHelper, type SolTransferHelper } from '../features/sol
 import { createSplTokenHelper, type SplTokenHelper, type SplTokenHelperConfig } from '../features/spl';
 import { createStakeHelper, type StakeHelper } from '../features/stake';
 import { createTransactionHelper, type TransactionHelper } from '../features/transactions';
+import { createWsolHelper, type WsolHelper } from '../features/wsol';
 import {
 	type PrepareTransactionMessage,
 	type PrepareTransactionOptions,
@@ -71,6 +72,17 @@ function wrapStakeHelper(helper: StakeHelper, getFallback: () => Commitment): St
 	};
 }
 
+function wrapWsolHelper(helper: WsolHelper, getFallback: () => Commitment): WsolHelper {
+	return {
+		prepareUnwrapSol: (config) => helper.prepareUnwrapSol(withDefaultCommitment(config, getFallback)),
+		prepareWrapSol: (config) => helper.prepareWrapSol(withDefaultCommitment(config, getFallback)),
+		sendPreparedUnwrapSol: helper.sendPreparedUnwrapSol,
+		sendPreparedWrapSol: helper.sendPreparedWrapSol,
+		unwrapSol: (config, options) => helper.unwrapSol(withDefaultCommitment(config, getFallback), options),
+		wrapSol: (config, options) => helper.wrapSol(withDefaultCommitment(config, getFallback), options),
+	};
+}
+
 function normaliseConfigValue(value: unknown): string | undefined {
 	if (value === null || value === undefined) {
 		return undefined;
@@ -100,6 +112,7 @@ export function createClientHelpers(runtime: SolanaClientRuntime, store: ClientS
 	let solTransfer: SolTransferHelper | undefined;
 	let stake: StakeHelper | undefined;
 	let transaction: TransactionHelper | undefined;
+	let wsol: WsolHelper | undefined;
 
 	const getSolTransfer = () => {
 		if (!solTransfer) {
@@ -120,6 +133,13 @@ export function createClientHelpers(runtime: SolanaClientRuntime, store: ClientS
 			transaction = createTransactionHelper(runtime, getFallbackCommitment);
 		}
 		return transaction;
+	};
+
+	const getWsol = () => {
+		if (!wsol) {
+			wsol = wrapWsolHelper(createWsolHelper(runtime), getFallbackCommitment);
+		}
+		return wsol;
 	};
 
 	function getSplTokenHelper(config: SplTokenHelperConfig): SplTokenHelper {
@@ -155,6 +175,9 @@ export function createClientHelpers(runtime: SolanaClientRuntime, store: ClientS
 		},
 		get transaction() {
 			return getTransaction();
+		},
+		get wsol() {
+			return getWsol();
 		},
 		prepareTransaction: prepareTransactionWithRuntime,
 	});
