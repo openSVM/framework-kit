@@ -36,6 +36,8 @@ export type {
 	UseSplTokenReturnType,
 	UseTransactionPoolParameters,
 	UseTransactionPoolReturnType,
+	UseUnwrapSolParameters,
+	UseUnwrapSolReturnType,
 	UseWaitForSignatureOptions,
 	UseWaitForSignatureParameters,
 	UseWaitForSignatureReturnType,
@@ -45,6 +47,8 @@ export type {
 	UseWalletReturnType,
 	UseWalletSessionParameters,
 	UseWalletSessionReturnType,
+	UseWrapSolParameters,
+	UseWrapSolReturnType,
 } from './hooks';
 export {
 	useAccount,
@@ -61,10 +65,12 @@ export {
 	useSplToken,
 	useStake,
 	useTransactionPool,
+	useUnwrapSol,
 	useWaitForSignature,
 	useWallet,
 	useWalletActions,
 	useWalletSession,
+	useWrapSol,
 } from './hooks';
 export { SolanaQueryProvider } from './QueryProvider';
 export type { QueryStatus, SolanaQueryResult, UseSolanaRpcQueryOptions } from './query';

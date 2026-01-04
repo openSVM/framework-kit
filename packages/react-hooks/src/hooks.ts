@@ -45,10 +45,13 @@ import {
 	toAddress,
 	type UnstakeInput,
 	type UnstakeSendOptions,
+	type UnwrapSolConfig,
 	type WalletSession,
 	type WalletStatus,
 	type WithdrawInput,
 	type WithdrawSendOptions,
+	type WrapSolConfig,
+	type WsolHelper,
 } from '@solana/client';
 import type { Commitment, Lamports, Signature } from '@solana/kit';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
@@ -603,6 +606,147 @@ export function useSplToken(
 		sendSignature: sendState.data ?? null,
 		sendStatus: sendState.status,
 		status,
+	};
+}
+
+type WrapSolSignature = UnwrapPromise<ReturnType<WsolHelper['wrapSol']>>;
+type UnwrapSolSignature = UnwrapPromise<ReturnType<WsolHelper['unwrapSol']>>;
+
+/**
+ * Convenience wrapper for wrapping native SOL into wSOL (Wrapped SOL).
+ * Wrapping SOL creates an Associated Token Account for wSOL and transfers SOL into it.
+ *
+ * @example
+ * ```ts
+ * const { wrap, isWrapping, signature, error } = useWrapSol();
+ * // Wrap 0.1 SOL
+ * await wrap({ amount: 100_000_000n });
+ * ```
+ */
+export function useWrapSol(): Readonly<{
+	error: unknown;
+	helper: WsolHelper;
+	isWrapping: boolean;
+	reset(): void;
+	signature: WrapSolSignature | null;
+	status: AsyncState<WrapSolSignature>['status'];
+	wrap(
+		config: Omit<WrapSolConfig, 'authority' | 'owner'>,
+		options?: SolTransferSendOptions,
+	): Promise<WrapSolSignature>;
+}> {
+	const client = useSolanaClient();
+	const session = useWalletSession();
+	const helper = client.wsol;
+
+	const [state, setState] = useState<AsyncState<WrapSolSignature>>(createInitialAsyncState<WrapSolSignature>());
+
+	const wrap = useCallback(
+		async (config: Omit<WrapSolConfig, 'authority' | 'owner'>, options?: SolTransferSendOptions) => {
+			if (!session) {
+				throw new Error('Connect a wallet before wrapping SOL.');
+			}
+			setState(createAsyncState<WrapSolSignature>('loading'));
+			try {
+				const signature = await helper.wrapSol(
+					{
+						...config,
+						authority: session,
+						owner: session.account.address,
+					},
+					options,
+				);
+				setState(createAsyncState<WrapSolSignature>('success', { data: signature }));
+				return signature;
+			} catch (error) {
+				setState(createAsyncState<WrapSolSignature>('error', { error }));
+				throw error;
+			}
+		},
+		[helper, session],
+	);
+
+	const reset = useCallback(() => {
+		setState(createInitialAsyncState<WrapSolSignature>());
+	}, []);
+
+	return {
+		error: state.error ?? null,
+		helper,
+		isWrapping: state.status === 'loading',
+		reset,
+		signature: state.data ?? null,
+		status: state.status,
+		wrap,
+	};
+}
+
+/**
+ * Convenience wrapper for unwrapping wSOL (Wrapped SOL) back to native SOL.
+ * Unwrapping closes the wSOL Associated Token Account and returns SOL to the wallet.
+ *
+ * @example
+ * ```ts
+ * const { unwrap, isUnwrapping, signature, error } = useUnwrapSol();
+ * // Unwrap all wSOL back to native SOL
+ * await unwrap({});
+ * ```
+ */
+export function useUnwrapSol(): Readonly<{
+	error: unknown;
+	helper: WsolHelper;
+	isUnwrapping: boolean;
+	reset(): void;
+	signature: UnwrapSolSignature | null;
+	status: AsyncState<UnwrapSolSignature>['status'];
+	unwrap(
+		config: Omit<UnwrapSolConfig, 'authority' | 'owner'>,
+		options?: SolTransferSendOptions,
+	): Promise<UnwrapSolSignature>;
+}> {
+	const client = useSolanaClient();
+	const session = useWalletSession();
+	const helper = client.wsol;
+
+	const [state, setState] = useState<AsyncState<UnwrapSolSignature>>(createInitialAsyncState<UnwrapSolSignature>());
+
+	const unwrap = useCallback(
+		async (config: Omit<UnwrapSolConfig, 'authority' | 'owner'>, options?: SolTransferSendOptions) => {
+			if (!session) {
+				throw new Error('Connect a wallet before unwrapping SOL.');
+			}
+			setState(createAsyncState<UnwrapSolSignature>('loading'));
+			try {
+				const signature = await helper.unwrapSol(
+					{
+						...config,
+						authority: session,
+						owner: session.account.address,
+					},
+					options,
+				);
+				setState(createAsyncState<UnwrapSolSignature>('success', { data: signature }));
+				return signature;
+			} catch (error) {
+				setState(createAsyncState<UnwrapSolSignature>('error', { error }));
+				throw error;
+			}
+		},
+		[helper, session],
+	);
+
+	const reset = useCallback(() => {
+		setState(createInitialAsyncState<UnwrapSolSignature>());
+	}, []);
+
+	return {
+		error: state.error ?? null,
+		helper,
+		isUnwrapping: state.status === 'loading',
+		reset,
+		signature: state.data ?? null,
+		status: state.status,
+		unwrap,
 	};
 }
 
@@ -1255,3 +1399,9 @@ export type UseLookupTableReturnType = ReturnType<typeof useLookupTable>;
 
 export type UseNonceAccountParameters = Readonly<{ address?: AddressLike; options?: UseNonceAccountOptions }>;
 export type UseNonceAccountReturnType = ReturnType<typeof useNonceAccount>;
+
+export type UseWrapSolParameters = undefined;
+export type UseWrapSolReturnType = ReturnType<typeof useWrapSol>;
+
+export type UseUnwrapSolParameters = undefined;
+export type UseUnwrapSolReturnType = ReturnType<typeof useUnwrapSol>;

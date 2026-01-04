@@ -138,6 +138,39 @@ function TokenPanel({
 }
 ```
 
+### Wrap and unwrap SOL (wSOL)
+
+```tsx
+import { useWrapSol, useUnwrapSol } from "@solana/react-hooks";
+
+function WsolPanel() {
+  const { wrap, isWrapping, signature: wrapSignature, error: wrapError } =
+    useWrapSol();
+  const {
+    unwrap,
+    isUnwrapping,
+    signature: unwrapSignature,
+    error: unwrapError,
+  } = useUnwrapSol();
+
+  return (
+    <div>
+      <button disabled={isWrapping} onClick={() => wrap({ amount: 100_000_000n })}>
+        {isWrapping ? "Wrapping…" : "Wrap 0.1 SOL"}
+      </button>
+      {wrapSignature && <p>Wrapped: {wrapSignature.toString()}</p>}
+      {wrapError && <p role="alert">Wrap error</p>}
+
+      <button disabled={isUnwrapping} onClick={() => unwrap({})}>
+        {isUnwrapping ? "Unwrapping…" : "Unwrap wSOL"}
+      </button>
+      {unwrapSignature && <p>Unwrapped: {unwrapSignature.toString()}</p>}
+      {unwrapError && <p role="alert">Unwrap error</p>}
+    </div>
+  );
+}
+```
+
 ### Fetch address lookup tables
 
 ```tsx

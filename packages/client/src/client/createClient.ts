@@ -99,6 +99,9 @@ export function createClient(config: SolanaClientConfig): SolanaClient {
 		get transaction() {
 			return helpers.transaction;
 		},
+		get wsol() {
+			return helpers.wsol;
+		},
 		prepareTransaction: helpers.prepareTransaction,
 		watchers,
 	};
